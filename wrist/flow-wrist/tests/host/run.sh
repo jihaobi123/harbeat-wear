@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+host_cc="${CC:-clang}"
+
 test_bin="$(mktemp /tmp/flow-core-test.XXXXXX)"
 protocol_bin="$(mktemp /tmp/flow-protocol-test.XXXXXX)"
 power_bin="$(mktemp /tmp/flow-power-test.XXXXXX)"
@@ -10,7 +12,7 @@ gesture_bin="$(mktemp /tmp/flow-gesture-test.XXXXXX)"
 input_bin="$(mktemp /tmp/flow-input-test.XXXXXX)"
 trap 'rm -f "$test_bin" "$protocol_bin" "$power_bin" "$carousel_bin" "$link_bin" "$gesture_bin" "$input_bin"' EXIT
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_core/include \
   tests/host/test_flow_core.c \
   components/flow_core/flow_core.c \
@@ -18,7 +20,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$test_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_core/include \
   -Icomponents/flow_protocol/include \
   -Imanaged_components/espressif__cbor/tinycbor/src \
@@ -30,7 +32,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$protocol_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_power/include \
   tests/host/test_power_policy.c \
   components/flow_power/flow_power_policy.c \
@@ -38,7 +40,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$power_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_ui/include \
   tests/host/test_carousel_model.c \
   components/flow_ui/flow_carousel_model.c \
@@ -46,7 +48,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$carousel_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_ble/include \
   -Icomponents/flow_core/include \
   tests/host/test_link_state.c \
@@ -55,7 +57,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$link_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_gesture/include \
   tests/host/test_gesture_engine.c \
   components/flow_gesture/flow_gesture_engine.c \
@@ -63,7 +65,7 @@ clang -std=c11 -Wall -Wextra -Werror \
 
 "$gesture_bin"
 
-clang -std=c11 -Wall -Wextra -Werror \
+"$host_cc" -std=c11 -Wall -Wextra -Werror \
   -Icomponents/flow_core/include \
   -Icomponents/flow_gesture/include \
   tests/host/test_input_coordinator.c \
