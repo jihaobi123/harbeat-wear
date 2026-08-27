@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harbeat.local/contracts/engine-ipc-v1.schema.json",
+  "title": "Flow Wear Engine IPC v1 message",
+  "type": "object",
+  "required": ["v", "kind"],
+  "properties": {
+    "v": {"const": 1},
+    "kind": {
+      "enum": ["hello", "hello_ok", "get_state", "state", "set_direction", "accepted", "progress", "completed", "rejected"]
+    },
+    "client": {"const": "hub-gateway"},
+    "server": {"type": "string", "minLength": 1, "maxLength": 32},
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["set_energy", "set_style", "transition_progress"]}
+    },
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "wrist_command_id": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+    "op": {"enum": ["set_energy", "set_style"]},
+    "value": {
+      "oneOf": [
+        {"type": "integer", "minimum": 1, "maximum": 5},
+        {"enum": ["hiphop", "breaking", "funk", "locking"]}
+      ]
+    },
+    "received_at_ms": {"type": "integer", "minimum": 0},
+    "phase": {"enum": ["idle", "accepted", "preparing", "transitioning", "completed", "rejected", "error"]},
+    "locked": {"type": "boolean"},
+    "current": {"$ref": "#/$defs/musicState"},
+    "target": {"oneOf": [{"$ref": "#/$defs/musicState"}, {"type": "null"}]},
+    "eta_ms": {"type": "integer", "minimum": 0, "maximum": 120000},
+    "error": {"enum": ["busy", "unsupported", "no_candidate", "engine_error", "protocol_error"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "hello"}}}, "then": {"required": ["client", "capabilities"]}},
+    {"if": {"properties": {"kind": {"const": "hello_ok"}}}, "then": {"required": ["server", "capabilities"]}},
+    {"if": {"properties": {"kind": {"const": "get_state"}}}, "then": {"required": ["request_id"]}},
+    {"if": {"properties": {"kind": {"const": "state"}}}, "then": {"required": ["request_id", "phase", "locked", "current", "target", "eta_ms"]}},
+    {"if": {"properties": {"kind": {"const": "set_direction"}}}, "then": {"required": ["request_id", "wrist_command_id", "op", "value", "received_at_ms"]}},
+    {"if": {"properties": {"kind": {"const": "accepted"}}}, "then": {"required": ["request_id", "target", "eta_ms"]}},
+    {"if": {"properties": {"kind": {"const": "progress"}}}, "then": {"required": ["request_id", "phase", "eta_ms"]}},
+    {"if": {"properties": {"kind": {"const": "completed"}}}, "then": {"required": ["request_id", "current"]}},
+    {"if": {"properties": {"kind": {"const": "rejected"}}}, "then": {"required": ["request_id", "error"]}}
+  ],
+  "$defs": {
+    "musicState": {
+      "type": "object",
+      "required": ["energy", "style", "bpm"],
+      "properties": {
+        "energy": {"type": "integer", "minimum": 1, "maximum": 5},
+        "style": {"enum": ["hiphop", "breaking", "funk", "locking"]},
+        "bpm": {"type": "integer", "minimum": 1, "maximum": 300}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
