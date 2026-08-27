@@ -139,7 +139,7 @@ RK3588 连接后必须依次执行：
 
 Hub 必须在 500 ms 内回带相同 `ack_id` 的 `accepted` snapshot，然后按 `preparing`、`transitioning`、`completed` 更新。执行期间 `locked` 保持 `true`，`eta_ms` 单调递减。`completed` 时先把 `current` 更新为真实播放状态，再解除锁定。
 
-完整字段、错误码、去重和重连规则见 [ble-protocol-v1.md](ble-protocol-v1.md)。不要为了绕过桌面系统的配对限制而去掉加密权限。
+完整字段、错误码、去重和重连规则见 [BLE v1 合同](../../../contracts/ble-v1.md)。不要为了绕过桌面系统的配对限制而去掉加密权限。
 
 ## 6. 构建、测试与烧录
 
@@ -221,7 +221,7 @@ python3 -m venv .venv-hub
 
 ## 9. 给下一位 AI 的工作边界
 
-- 先读本文件和 [ble-protocol-v1.md](ble-protocol-v1.md)，再改代码；
+- 先读本文件和 [BLE v1 合同](../../../contracts/ble-v1.md)，再改代码；
 - 保留暖纸白和四个人物插画资产，不要换成重型全屏动画；
 - 动效优先使用位移、透明度和 140 ms 左右的 LVGL 动画，避免大图逐帧动画；
 - 触控始终高于手势，Hub `locked` 或 BLE 非 READY 时不得发送；
