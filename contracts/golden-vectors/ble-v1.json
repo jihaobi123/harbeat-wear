@@ -1,0 +1,14 @@
+{
+  "commands": [
+    {
+      "name": "set_energy_5",
+      "semantic": {"v": 1, "kind": "command", "id": 42, "op": "set_energy", "value": 5},
+      "cbor_hex": "a5617601646b696e6467636f6d6d616e64626964182a626f706a7365745f656e657267796576616c756505"
+    },
+    {
+      "name": "set_style_breaking",
+      "semantic": {"v": 1, "kind": "command", "id": 43, "op": "set_style", "value": "breaking"},
+      "cbor_hex": "a5617601646b696e6467636f6d6d616e64626964182b626f70697365745f7374796c656576616c756568627265616b696e67"
+    }
+  ]
+}

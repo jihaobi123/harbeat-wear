@@ -19,6 +19,16 @@ KINDS = {
 }
 
 
+def validate_ble_vectors(root: Path = ROOT) -> None:
+    path = root / "contracts" / "golden-vectors" / "ble-v1.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    names = {item["name"] for item in data.get("commands", [])}
+    assert names == {"set_energy_5", "set_style_breaking"}, "unexpected BLE vector names"
+    for item in data["commands"]:
+        encoded = bytes.fromhex(item["cbor_hex"])
+        assert 0 < len(encoded) <= 192, f"{item['name']}: encoded size"
+
+
 def validate_engine_examples(root: Path = ROOT) -> None:
     path = root / "contracts" / "examples" / "engine-ipc-v1.jsonl"
     seen: set[str] = set()
@@ -46,6 +56,8 @@ def validate_engine_schema(root: Path = ROOT) -> None:
 
 
 def main() -> int:
+    validate_ble_vectors()
+    print("BLE v1 vectors: OK")
     validate_engine_examples()
     validate_engine_schema()
     print("Engine IPC v1 examples: OK")

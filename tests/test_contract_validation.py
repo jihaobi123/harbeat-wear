@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from tools.validate_contracts import validate_engine_examples, validate_engine_schema
+from tools.validate_contracts import validate_ble_vectors, validate_engine_examples, validate_engine_schema
 
 
 KINDS = {
@@ -89,3 +89,12 @@ def test_schema_validation_rejects_out_of_range_energy(tmp_path: Path) -> None:
 
     with pytest.raises(AssertionError, match="line 4: schema"):
         validate_engine_schema(tmp_path)
+
+
+def test_ble_vectors_reject_unexpected_vector_set(tmp_path: Path) -> None:
+    path = tmp_path / "contracts" / "golden-vectors" / "ble-v1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"commands": [{"name": "other", "cbor_hex": "01"}]}), encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="unexpected BLE vector names"):
+        validate_ble_vectors(tmp_path)
