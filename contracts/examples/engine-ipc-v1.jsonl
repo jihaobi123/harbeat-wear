@@ -1,0 +1,9 @@
+{"v":1,"kind":"hello","client":"hub-gateway","capabilities":["set_energy","set_style","transition_progress"]}
+{"v":1,"kind":"hello_ok","server":"music-engine","capabilities":["set_energy","set_style","transition_progress"]}
+{"v":1,"kind":"get_state","request_id":"gw-test-state-1"}
+{"v":1,"kind":"state","request_id":"gw-test-state-1","phase":"idle","locked":false,"current":{"energy":3,"style":"hiphop","bpm":96},"target":null,"eta_ms":0}
+{"v":1,"kind":"set_direction","request_id":"gw-test-command-1","wrist_command_id":42,"op":"set_energy","value":5,"received_at_ms":1787812345678}
+{"v":1,"kind":"accepted","request_id":"gw-test-command-1","target":{"energy":5,"style":"hiphop","bpm":102},"eta_ms":14000}
+{"v":1,"kind":"progress","request_id":"gw-test-command-1","phase":"transitioning","eta_ms":7000}
+{"v":1,"kind":"completed","request_id":"gw-test-command-1","current":{"energy":5,"style":"hiphop","bpm":102}}
+{"v":1,"kind":"rejected","request_id":"gw-test-command-2","error":"no_candidate"}

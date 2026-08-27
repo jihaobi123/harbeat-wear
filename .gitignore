@@ -15,6 +15,7 @@
 release/
 *.log
 *.jsonl
+!contracts/examples/*.jsonl
 .env
 .env.*
 !.env.example
