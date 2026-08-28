@@ -1,0 +1,27 @@
+name: component-boundary
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: component-boundary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collect changed files
+        run: git diff --name-only --diff-filter=ACMR "origin/${GITHUB_BASE_REF}...HEAD" > "${RUNNER_TEMP}/changed-files.txt"
+      - name: Enforce component boundary
+        run: |
+          python tools/wear_repo_policy.py validate \
+            --branch "$GITHUB_HEAD_REF" \
+            --files-from "${RUNNER_TEMP}/changed-files.txt"

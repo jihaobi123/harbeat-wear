@@ -22,6 +22,11 @@ def test_component_pr_merges_only_with_all_required_checks(
         draft=False,
         internal=True,
         mergeable=True,
+        changed_paths=[
+            "wrist/flow-wrist/main/app_main.c"
+            if component_check == "wrist-host"
+            else "ring/flow-ring/src/main.c"
+        ],
         checks={
             "component-boundary": "success",
             "contracts": "success",
@@ -40,6 +45,7 @@ def test_non_successful_check_blocks_merge(conclusion: str) -> None:
         draft=False,
         internal=True,
         mergeable=True,
+        changed_paths=["wrist/flow-wrist/main/app_main.c"],
         checks={
             "component-boundary": "success",
             "contracts": "success",
@@ -57,6 +63,7 @@ def test_missing_check_blocks_merge() -> None:
         draft=False,
         internal=True,
         mergeable=True,
+        changed_paths=["ring/flow-ring/src/main.c"],
         checks={"component-boundary": "success", "contracts": "success"},
     )
     assert decision.merge is False
@@ -79,6 +86,7 @@ def test_non_component_branches_never_auto_merge(branch: str) -> None:
         draft=False,
         internal=True,
         mergeable=True,
+        changed_paths=[],
         checks={},
     )
     assert decision.merge is False
@@ -106,6 +114,7 @@ def test_pr_state_can_block_auto_merge(
         draft=draft,
         internal=internal,
         mergeable=mergeable,
+        changed_paths=["ring/flow-ring/src/main.c"],
         checks={
             "component-boundary": "success",
             "contracts": "success",
@@ -114,6 +123,29 @@ def test_pr_state_can_block_auto_merge(
     )
     assert decision.merge is False
     assert decision.reason == reason
+
+
+def test_trusted_auto_merge_policy_rejects_out_of_scope_file() -> None:
+    decision = evaluate_merge(
+        branch="codex/wrist-power-fix",
+        base="main",
+        draft=False,
+        internal=True,
+        mergeable=True,
+        changed_paths=[
+            "wrist/flow-wrist/main/app_main.c",
+            ".github/workflows/component-boundary.yml",
+        ],
+        checks={
+            "component-boundary": "success",
+            "contracts": "success",
+            "wrist-host": "success",
+        },
+    )
+    assert decision.merge is False
+    assert decision.reason == (
+        "trusted path validation failed: .github/workflows/component-boundary.yml"
+    )
 
 
 def test_latest_completed_check_wins() -> None:

@@ -11,7 +11,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Optional
 
-from tools.wear_repo_policy import PolicyError, classify_branch
+from tools.wear_repo_policy import PolicyError, classify_branch, validate_paths
 
 
 @dataclass(frozen=True)
@@ -32,6 +32,7 @@ def evaluate_merge(
     draft: bool,
     internal: bool,
     mergeable: bool,
+    changed_paths: Iterable[str],
     checks: Mapping[str, str],
 ) -> MergeDecision:
     """Decide whether one pull request is eligible for automatic merge."""
@@ -51,6 +52,13 @@ def evaluate_merge(
         return MergeDecision(False, "external pull request")
     if not mergeable:
         return MergeDecision(False, "pull request is not mergeable")
+
+    violations = validate_paths(component, changed_paths)
+    if violations:
+        return MergeDecision(
+            False,
+            f"trusted path validation failed: {', '.join(violations)}",
+        )
 
     for name in _REQUIRED_CHECKS[component]:
         if checks.get(name) != "success":
@@ -95,7 +103,7 @@ class GitHubApi:
         method: str,
         path: str,
         payload: Optional[Mapping[str, Any]] = None,
-    ) -> Mapping[str, Any]:
+    ) -> Any:
         body = None
         if payload is not None:
             body = json.dumps(payload).encode("utf-8")
@@ -113,23 +121,42 @@ class GitHubApi:
         )
         with urllib.request.urlopen(request, timeout=20) as response:
             data = json.loads(response.read().decode("utf-8"))
-        if not isinstance(data, dict):
-            raise RuntimeError("GitHub API returned a non-object response")
         return data
 
     def get_pull_request(self, number: int) -> Mapping[str, Any]:
-        return self.request("GET", f"/pulls/{number}")
+        data = self.request("GET", f"/pulls/{number}")
+        if not isinstance(data, dict):
+            raise RuntimeError("GitHub API pull request response is not an object")
+        return data
+
+    def get_pull_files(self, number: int) -> list[str]:
+        filenames: list[str] = []
+        for page in range(1, 31):
+            data = self.request(
+                "GET",
+                f"/pulls/{number}/files?per_page=100&page={page}",
+            )
+            if not isinstance(data, list):
+                raise RuntimeError("GitHub API pull files response is not a list")
+            for item in data:
+                if isinstance(item, dict) and isinstance(item.get("filename"), str):
+                    filenames.append(item["filename"])
+            if len(data) < 100:
+                return filenames
+        raise RuntimeError("pull request exceeds the 3000-file validation limit")
 
     def get_check_runs(self, sha: str) -> list[Mapping[str, Any]]:
         encoded_sha = urllib.parse.quote(sha, safe="")
         data = self.request("GET", f"/commits/{encoded_sha}/check-runs?per_page=100")
+        if not isinstance(data, dict):
+            raise RuntimeError("GitHub API check-runs response is not an object")
         check_runs = data.get("check_runs", [])
         if not isinstance(check_runs, list):
             raise RuntimeError("GitHub API check_runs is not a list")
         return [run for run in check_runs if isinstance(run, dict)]
 
     def squash_merge(self, number: int, sha: str, title: str) -> Mapping[str, Any]:
-        return self.request(
+        data = self.request(
             "PUT",
             f"/pulls/{number}/merge",
             {
@@ -138,6 +165,9 @@ class GitHubApi:
                 "commit_title": title,
             },
         )
+        if not isinstance(data, dict):
+            raise RuntimeError("GitHub API merge response is not an object")
+        return data
 
 
 def _load_event(path: str) -> Mapping[str, Any]:
@@ -189,12 +219,14 @@ def main() -> int:
         internal = isinstance(head_repo, dict) and head_repo.get("full_name") == repository
         sha = str(head.get("sha", ""))
         checks = latest_check_conclusions(api.get_check_runs(sha)) if sha else {}
+        changed_paths = api.get_pull_files(number)
         decision = evaluate_merge(
             branch=str(head.get("ref", "")),
             base=str(base.get("ref", "")),
             draft=bool(pull.get("draft", False)),
             internal=internal,
             mergeable=pull.get("mergeable") is True,
+            changed_paths=changed_paths,
             checks=checks,
         )
         if not decision.merge:
