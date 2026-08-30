@@ -31,7 +31,7 @@
 4. 写入完整 Hub State。
 5. 此时 Wrist 才开放能量和风格控制。
 
-完整字段和错误处理以 [ble-protocol-v1.md](ble-protocol-v1.md) 为准。
+完整字段和错误处理以 [BLE v1 合同](../../../contracts/ble-v1.md) 为准。
 
 Hub State 和 Catalog 可以使用 GATT Long Write。建议协商 MTU 247，但实现不能把 MTU 247 当作前提。
 

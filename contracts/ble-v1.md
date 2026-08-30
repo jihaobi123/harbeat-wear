@@ -187,4 +187,4 @@ Hub 如果收到不该出现的第二条命令，回 `phase: rejected`、`locked
 8. 切歌期间按 phase 写 snapshot；每次 revision +1。
 9. completed 时先更新 current，再把 locked 设为 false。
 
-Mac 和 RK3588 共用的参考实现是 [`tools/flow_hub_mock.py`](../tools/flow_hub_mock.py)。它不是正式音乐引擎，但 GATT 顺序、CBOR 字段、ACK 和 phase 时序与本协议一致。
+Mac 和 RK3588 共用的参考实现是 [`flow_hub_mock.py`](../wrist/flow-wrist/tools/flow_hub_mock.py)。它不是正式音乐引擎，但 GATT 顺序、CBOR 字段、ACK 和 phase 时序与本协议一致。

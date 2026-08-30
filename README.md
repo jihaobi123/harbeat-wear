@@ -1,59 +1,37 @@
-# Flow Wrist V0.1 固件
+# HarBeat Wear
 
-这是 Flow Wear 手环端的首版 ESP-IDF 工程，面向 Waveshare ESP32-S3-Touch-AMOLED-2.06。当前包含：
+HarBeat Wear 保存 Flow Wrist、Flow Ring 和 Wear Hub Gateway 的设备侧代码。
 
-- 暖纸白插画风 LVGL 界面；
-- 五档能量与 HIPHOP、BREAKING、FUNK、LOCKING 风格选择；
-- 发送、执行中双唱片、完成、忙碌和断线状态；
-- CBOR v1 协议与 Hub 权威状态归并；
-- NimBLE Peripheral / GATT Server；
-- BOOT 短按唤醒、自动降亮度与熄屏；
-- AXP2101 电量读取和标准 BLE Battery Service；
-- 无需 RK3588 的本地 Hub 流程模拟器。
-- QMI8658 无触控手势控制（实验版，需完成佩戴校准）。
+## 当前状态
 
-## Mac 开发环境
+- Wrist：Waveshare ESP32-S3-Touch-AMOLED-2.06，V0.1 Alpha 开发中；
+- Hub Gateway：RK3588 / BlueZ，V0.1 开发中；
+- Ring：XIAO nRF54L15 Sense，V0.1 手势音效戒指设计已批准；
 
-```bash
-source "$HOME/.espressif/tools/activate_idf_v5.5.5.sh"
-cd "/Users/jihaobi/Documents/New project/firmware/flow-wrist"
-```
+## 目录
 
-运行 Mac 主机测试：
+- `wrist/flow-wrist`：ESP-IDF Wrist 固件；
+- `hub-gateway`：RK3588 BLE 与音乐引擎网关；
+- `contracts`：BLE 和 Engine IPC 的唯一协议来源；
+- `docs/superpowers`：批准的设计和执行计划；
+- `ring/flow-ring`：nRF Connect SDK / Zephyr Ring 固件与开发文档。
 
-```bash
-./tests/host/run.sh
-```
+先阅读 `docs/superpowers/specs/2026-08-27-flow-wrist-field-ready-v0.1-design.md`。
 
-## 构建演示版
+## 提交边界
 
-默认开启本地 Hub 模拟器，适合先验收完整 UI 流程：
+- Wrist 开发分支使用 `codex/wrist-<任务>`，只修改 `wrist/**`。
+- Ring 开发分支使用 `codex/ring-<任务>`，只修改 `ring/**`。
+- 两类 PR 都会先检查目录边界和组件测试；全部通过后自动 squash merge。
+- 协议、CI 和根文档使用 `codex/shared-<任务>`，由人工审阅后合并。
 
-```bash
-idf.py -B build build
-```
+详细规则见 [`docs/REPOSITORY-WORKFLOW.md`](docs/REPOSITORY-WORKFLOW.md)。
 
-## 构建真实 BLE 版
-
-真实 BLE 版使用独立配置，避免覆盖演示版：
+## 开发环境
 
 ```bash
-idf.py -B build-ble \
-  -D SDKCONFIG=build-ble/sdkconfig \
-  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.ble.defaults' \
-  reconfigure build
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
 ```
 
-接入开发板后再烧录：
-
-```bash
-serial_port="$(find /dev -maxdepth 1 -name 'cu.usbmodem*' -print -quit)"
-test -n "$serial_port"
-idf.py -B build-ble -p "$serial_port" flash monitor
-```
-
-不要在没有找到串口时跳过 `test` 强行烧录。板级检查见 [hardware-bringup.md](docs/hardware-bringup.md)，Hub 联调步骤见 [ble-test.md](docs/ble-test.md)。
-
-RK3588 对接先读 [BLE 协议 v1](docs/ble-protocol-v1.md)。[`tools/flow_hub_mock.py`](tools/flow_hub_mock.py) 提供相同的 Catalog、snapshot、命令 ACK 和 10–20 秒切换状态机；Linux/BlueZ 可完成全链路测试。部分 macOS 版本不会为命令行 CoreBluetooth 客户端触发自动配对，遇到这种情况按 [ble-test.md](docs/ble-test.md) 的验收边界处理。
-
-如果要把项目交给另一位开发者或 AI，直接发送 [Flow Wrist V0.1 开发接手手册](docs/AI-DEVELOPMENT-HANDOFF.md)。其中包含产品边界、代码结构、触控与手势、BLE 对接顺序、烧录方法、已验证结果和下一步清单。
+Wrist host tests 与 ESP-IDF build 分开运行，避免 ESP-IDF 的交叉编译工具覆盖 macOS host compiler。
